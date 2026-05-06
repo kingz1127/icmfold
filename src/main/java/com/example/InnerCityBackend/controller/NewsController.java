@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/news")
 @RequiredArgsConstructor
-@Tag(name = "News Controller", description = "User authentication and account management")
+@Tag(name = "News Controller", description = "Admin C,R,U,D and Users view")
 
 public class NewsController {
 
