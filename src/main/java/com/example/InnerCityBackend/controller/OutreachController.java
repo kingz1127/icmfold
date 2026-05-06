@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/outreach")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "User authentication and account management")
+@Tag(name = "Outreach Controller", description = "User authentication and account management")
 
 public class OutreachController {
 

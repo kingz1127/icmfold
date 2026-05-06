@@ -14,7 +14,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "User authentication and account management")
+@Tag(name = "User Controller", description = "User authentication and profile")
 
 public class UserController {
 

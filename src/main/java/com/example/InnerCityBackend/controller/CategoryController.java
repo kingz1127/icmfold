@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "User authentication and account management")
+@Tag(name = "Category Controller", description = "User authentication and account management")
 
 public class CategoryController {
 
