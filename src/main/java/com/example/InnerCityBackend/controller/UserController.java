@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("users")
 @RequiredArgsConstructor
 @Tag(name = "User Controller", description = "User profile edit ")
 
