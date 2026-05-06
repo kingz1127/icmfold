@@ -17,7 +17,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("news")
+@RequestMapping("/api/v1/news")
 @RequiredArgsConstructor
 @Tag(name = "News Controller", description = "Admin C,R,U,D and Users view")
 
