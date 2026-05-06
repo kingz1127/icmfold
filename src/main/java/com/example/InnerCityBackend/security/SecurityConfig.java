@@ -42,15 +42,15 @@ public class SecurityConfig {
                         .requestMatchers("/api-docs", "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/outreach/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/subcategories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/outreach/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/subcategories/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/news/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/news/**").hasRole("ADMIN")
 
                         // 4. Global catch-all (Must be last)
                         .anyRequest().authenticated()
