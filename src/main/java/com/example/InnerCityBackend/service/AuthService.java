@@ -1,14 +1,15 @@
 package com.example.InnerCityBackend.service;
 
 import com.example.InnerCityBackend.exception.BusinessException;
-import com.example.InnerCityBackend.model.dto.request.LoginRequest;
-import com.example.InnerCityBackend.model.dto.request.SignupRequest;
+import com.example.InnerCityBackend.model.dto.request.*;
 import com.example.InnerCityBackend.model.dto.response.AuthResponse;
 import com.example.InnerCityBackend.model.dto.response.UserResponse;
+import com.example.InnerCityBackend.model.entity.Otp;
 import com.example.InnerCityBackend.model.entity.User;
 import com.example.InnerCityBackend.model.enums.Gender;
 import com.example.InnerCityBackend.model.enums.UserRole;
 import com.example.InnerCityBackend.model.kingschat.KingsChatProfile;
+import com.example.InnerCityBackend.repository.OtpRepository;
 import com.example.InnerCityBackend.repository.UserRepository;
 import com.example.InnerCityBackend.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -33,6 +36,7 @@ import java.util.UUID;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final OtpRepository otpRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -230,6 +234,58 @@ public class AuthService {
     public void processForgotPassword(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("User with this email does not exist"));
+
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
+        userRepository.save(user);
+
+        // MOCK: Print to console. In production, send this via email service.
+//        System.out.println("DEBUG: Reset token for " + email + " is: " + token);
+    }
+
+    @Transactional
+    public void sendOtp(SendOTPRequest request) {
+        String email = request.getEmail();
+        String code = String.format("%06d", new Random().nextInt(999999));
+
+
+        otpRepository.deleteByEmail(email); // Clear previous codes
+
+        Otp otp = Otp.builder()
+                .email(email)
+                .code(code)
+                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        otpRepository.save(otp);
+        System.out.println("DEBUG: OTP for " + email + " is: " + code);
+    }
+
+    public void verifyOtp(VerifyOTPRequest request) {
+        Otp otp = otpRepository.findByEmailAndCode(request.getEmail(), request.getOtp())
+                .orElseThrow(() -> new BusinessException("Invalid OTP code"));
+
+        if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("OTP has expired");
+        }
+
+        otpRepository.delete(otp); // Code used, delete it
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByResetToken(request.getToken())
+                .orElseThrow(() -> new BusinessException("Invalid or expired reset token"));
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Token has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
     }
 
 
@@ -253,4 +309,6 @@ public class AuthService {
                 .user(userDto)
                 .build();
     }
+
+
 }

@@ -1,9 +1,6 @@
 package com.example.InnerCityBackend.controller;
 
-import com.example.InnerCityBackend.model.dto.request.ForgotPasswordRequest;
-import com.example.InnerCityBackend.model.dto.request.KingsChatAuthRequest;
-import com.example.InnerCityBackend.model.dto.request.LoginRequest;
-import com.example.InnerCityBackend.model.dto.request.SignupRequest;
+import com.example.InnerCityBackend.model.dto.request.*;
 import com.example.InnerCityBackend.model.dto.response.AuthResponse;
 import com.example.InnerCityBackend.model.dto.response.SuccessResponse;
 import com.example.InnerCityBackend.service.AuthService;
@@ -43,5 +40,22 @@ public class AuthController {
     @PostMapping("/kingschat")
     public ResponseEntity<AuthResponse> kingschat(@RequestBody KingsChatAuthRequest request) {
         return ResponseEntity.ok(authService.signInWithKingsChat(request.getAccessToken()));
+    }
+    @PostMapping("/reset-password")
+    public ResponseEntity<SuccessResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(new SuccessResponse("Password reset successful"));
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<SuccessResponse> sendOtp(@Valid @RequestBody SendOTPRequest request) {
+        authService.sendOtp(request);
+        return ResponseEntity.ok(new SuccessResponse("OTP sent to your email"));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<SuccessResponse> verifyOtp(@Valid @RequestBody VerifyOTPRequest request) {
+        authService.verifyOtp(request);
+        return ResponseEntity.ok(new SuccessResponse("OTP verified successfully"));
     }
 }

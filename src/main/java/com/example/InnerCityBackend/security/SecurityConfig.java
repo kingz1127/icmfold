@@ -42,6 +42,15 @@ public class SecurityConfig {
                         .requestMatchers("/api-docs", "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
 
+                        // ADMIN Restricted Write Access for Categories/Subcategories
+                        .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/subcategories/**").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/outreach/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/subcategories/**").permitAll()
@@ -51,6 +60,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/news/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/news/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/news/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/partners/**").permitAll() // Users can read
+                        .requestMatchers("/partners/**").hasRole("ADMIN") // Admin can CRUD
 
                         // 4. Global catch-all (Must be last)
                         .anyRequest().authenticated()
