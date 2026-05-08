@@ -10,5 +10,5 @@ public class SubcategoryResponse {
     private String name;
     private String description;
     private String categoryId;
-    private String categoryName;
+    private CategoryResponse category;
 }

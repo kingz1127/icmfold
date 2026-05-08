@@ -63,6 +63,10 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
 
+google:
+  maps:
+    api-key: AIzaSyCc_MCql3Oj69pRERZFpgk8Hym2GaUORVU
+
 logging:
   level:
     com.example.InnerCityBackend: DEBUG

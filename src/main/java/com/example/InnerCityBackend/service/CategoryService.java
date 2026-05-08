@@ -7,13 +7,13 @@ import com.example.InnerCityBackend.model.dto.response.CategoryResponse;
 import com.example.InnerCityBackend.model.dto.response.CategoryWithSubcategoriesResponse;
 import com.example.InnerCityBackend.model.dto.response.SubcategoryResponse;
 import com.example.InnerCityBackend.model.entity.Category;
-import com.example.InnerCityBackend.model.entity.Subcategory;
 import com.example.InnerCityBackend.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,19 +38,43 @@ public class CategoryService {
         return categoryRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
+
+    public List<CategoryWithSubcategoriesResponse> getAllWithSubcategories() {
+        return categoryRepository.findAll().stream()
+                .map(cat -> getWithSubs(cat.getId()))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public CategoryWithSubcategoriesResponse getWithSubs(String id) {
-        Category cat = categoryRepository.findById(id).orElseThrow(() -> new BusinessException("Not found"));
+        Category cat = categoryRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Category not found"));
+
+        CategoryResponse parentDto = mapToResponse(cat);
+
+        List<SubcategoryResponse> subDtos = cat.getSubcategories().stream()
+                .map(sub -> SubcategoryResponse.builder()
+                        .id(sub.getId())
+                        .categoryId(cat.getId())
+                        .name(sub.getName())
+                        .description(sub.getDescription())
+                        .category(parentDto)
+                        .build())
+                .toList();
+
         return CategoryWithSubcategoriesResponse.builder()
-                .id(cat.getId()).name(cat.getName()).description(cat.getDescription())
-                .subcategories(cat.getSubcategories().stream().map(this::mapToSubResponse).toList())
+                .id(cat.getId())
+                .name(cat.getName())
+                .description(cat.getDescription())
+                .subcategories(subDtos)
                 .build();
     }
 
     private CategoryResponse mapToResponse(Category c) {
-        return CategoryResponse.builder().id(c.getId()).name(c.getName()).description(c.getDescription()).build();
-    }
-
-    private SubcategoryResponse mapToSubResponse(Subcategory s) {
-        return SubcategoryResponse.builder().id(s.getId()).name(s.getName()).description(s.getDescription()).categoryId(s.getCategory().getId()).build();
+        return CategoryResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .description(c.getDescription())
+                .build();
     }
 }

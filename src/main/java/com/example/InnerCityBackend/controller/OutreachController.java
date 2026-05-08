@@ -1,59 +1,72 @@
 package com.example.InnerCityBackend.controller;
 
-import com.example.InnerCityBackend.model.dto.request.CreateOutreachRequest;
-import com.example.InnerCityBackend.model.dto.request.UpdateCountRequest;
-import com.example.InnerCityBackend.model.dto.response.SuccessResponse;
-import com.example.InnerCityBackend.model.entity.Outreach;
-import com.example.InnerCityBackend.model.enums.ApprovalStatus;
+import com.example.InnerCityBackend.model.dto.request.*;
+import com.example.InnerCityBackend.model.dto.response.*;
 import com.example.InnerCityBackend.service.OutreachService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("outreach")
+@RequestMapping("/outreaches")
+@Tag(name = "Outreach Controller", description = "Management of community events")
 @RequiredArgsConstructor
-@Tag(name = "Outreach Controller", description = "Admin access")
-
 public class OutreachController {
 
     private final OutreachService outreachService;
 
+    // CREATE
     @PostMapping
-    public ResponseEntity<Outreach> create(@Valid @RequestBody CreateOutreachRequest request) {
-        return new ResponseEntity<>(outreachService.createOutreach(request), HttpStatus.CREATED);
+    public ResponseEntity<OutreachResponse> create(@Valid @RequestBody CreateOutreachRequest req, Principal p) {
+        return ResponseEntity.ok(outreachService.createOutreach(req, p.getName()));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Outreach>> getAll() {
-        return ResponseEntity.ok(outreachService.getAllOutreaches());
+    // UPDATE (Admin Only)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OutreachResponse> update(@PathVariable String id, @RequestBody UpdateOutreachRequest req) {
+        return ResponseEntity.ok(outreachService.updateOutreach(id, req));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Outreach> getOne(@PathVariable String id) {
-        return ResponseEntity.ok(outreachService.getOutreachById(id));
-    }
-
-
-    @PatchMapping("/{id}/beneficiaries")
-    public ResponseEntity<SuccessResponse> updateBeneficiaries(
-            @PathVariable String id,
-            @Valid @RequestBody UpdateCountRequest request) {
-        outreachService.updateBeneficiariesCount(id, request.getCount());
-        return ResponseEntity.ok(new SuccessResponse("Beneficiaries updated"));
-    }
-
-
+    // APPROVE / REJECT (Admin Only)
     @PatchMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SuccessResponse> approve(@PathVariable String id) {
-        outreachService.changeApprovalStatus(id, ApprovalStatus.APPROVED);
-        return ResponseEntity.ok(new SuccessResponse("Outreach Approved"));
+    public ResponseEntity<OutreachResponse> approve(@PathVariable String id, @RequestBody ApproveRejectRequest req) {
+        return ResponseEntity.ok(outreachService.approveOrReject(id, req));
+    }
+
+    // DELETE (Admin Only)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponse> delete(@PathVariable String id) {
+        outreachService.delete(id);
+        return ResponseEntity.ok(new SuccessResponse("Outreach deleted successfully"));
+    }
+
+    // READ ALL
+    @GetMapping
+    public ResponseEntity<List<OutreachResponse>> getAll() {
+        return ResponseEntity.ok(outreachService.getAll());
+    }
+
+    // READ ONE
+    @GetMapping("/{id}")
+    public ResponseEntity<OutreachResponse> getOne(@PathVariable String id) {
+        return ResponseEntity.ok(outreachService.getById(id));
+    }
+
+    // BULK CSV (Admin Only)
+    @PostMapping(value = "/bulk-upload", consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SuccessResponse> bulkUpload(@RequestParam("file") MultipartFile file, Principal p) {
+        outreachService.uploadBulkCsv(file, p.getName());
+        return ResponseEntity.ok(new SuccessResponse("Bulk upload processed successfully"));
     }
 }

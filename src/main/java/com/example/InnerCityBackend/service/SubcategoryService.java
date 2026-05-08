@@ -3,6 +3,7 @@ package com.example.InnerCityBackend.service;
 import com.example.InnerCityBackend.exception.BusinessException;
 import com.example.InnerCityBackend.model.dto.request.CreateSubcategoryRequest;
 import com.example.InnerCityBackend.model.dto.request.UpdateSubcategoryRequest;
+import com.example.InnerCityBackend.model.dto.response.CategoryResponse;
 import com.example.InnerCityBackend.model.dto.response.SubcategoryResponse;
 import com.example.InnerCityBackend.model.entity.Category;
 import com.example.InnerCityBackend.model.entity.Subcategory;
@@ -52,37 +53,33 @@ public class SubcategoryService {
         return mapToResponse(subRepository.save(sub));
     }
 
-    // Fetches every subcategory in the database
     public List<SubcategoryResponse> getAll() {
-        return subRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return subRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    // Fetches subcategories filtered by their parent category
     public List<SubcategoryResponse> getByCategoryId(String categoryId) {
-        return subRepository.findByCategoryId(categoryId)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return subRepository.findByCategoryId(categoryId).stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public void deleteSubcategory(String id) {
-        if (!subRepository.existsById(id)) {
-            throw new BusinessException("Subcategory not found");
-        }
         subRepository.deleteById(id);
     }
 
     private SubcategoryResponse mapToResponse(Subcategory s) {
+        // Create the CategoryResponse object to satisfy the DTO type
+        CategoryResponse catDto = CategoryResponse.builder()
+                .id(s.getCategory().getId())
+                .name(s.getCategory().getName())
+                .description(s.getCategory().getDescription())
+                .build();
+
         return SubcategoryResponse.builder()
                 .id(s.getId())
                 .name(s.getName())
                 .description(s.getDescription())
                 .categoryId(s.getCategory().getId())
-                .categoryName(s.getCategory().getName())
+                .category(catDto)
                 .build();
     }
 }
