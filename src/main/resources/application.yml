@@ -65,7 +65,7 @@ springdoc:
 
 google:
   maps:
-    api-key: AIzaSyCc_MCql3Oj69pRERZFpgk8Hym2GaUORVU
+    api-key: ${GOOGLE_MAPS_API_KEY}
 
 logging:
   level:
