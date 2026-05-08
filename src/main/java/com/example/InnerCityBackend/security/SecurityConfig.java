@@ -35,7 +35,6 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
@@ -51,29 +50,28 @@ public class SecurityConfig {
                                 "/swagger-resources/**"
                         ).permitAll()
 
-                        // ADMIN Restricted Write Access for Categories/Subcategories
-                        .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
+                        // ADD /api/v1 prefix to all these paths
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/subcategories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/subcategories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/subcategories/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/outreach/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/subcategories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/outreach/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/subcategories/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/news/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/news/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/partners/**").permitAll() // Users can read
-                        .requestMatchers("/partners/**").hasRole("ADMIN") // Admin can CRUD
+                        .requestMatchers(HttpMethod.GET, "/api/v1/partners/**").permitAll()
+                        .requestMatchers("/api/v1/partners/**").hasRole("ADMIN")
 
-                        // 4. Global catch-all (Must be last)
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
