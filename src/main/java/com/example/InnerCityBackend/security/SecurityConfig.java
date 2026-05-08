@@ -51,13 +51,13 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // ADD /api/v1 prefix to all these paths
-                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ROLE_ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/subcategories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/subcategories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/subcategories/**").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/subcategories/**").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/subcategories/**").hasRole("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/outreach/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
@@ -65,12 +65,12 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/news/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/news/**").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/news/**").hasRole("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/news/**").hasRole("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/partners/**").permitAll()
-                        .requestMatchers("/api/v1/partners/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/partners/**").hasRole("ROLE_ADMIN")
 
                         .anyRequest().authenticated()
                 )
