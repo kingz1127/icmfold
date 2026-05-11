@@ -23,7 +23,7 @@ public class SignupRequest {
 
     @NotBlank
     private String gender;
-    // We will convert String to Enum in Service
+
     private String role = "user";
 
     @NotBlank

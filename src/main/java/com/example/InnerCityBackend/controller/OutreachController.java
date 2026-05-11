@@ -66,7 +66,9 @@ public class OutreachController {
     @PostMapping(value = "/bulk-upload", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SuccessResponse> bulkUpload(@RequestParam("file") MultipartFile file, Principal p) {
-        outreachService.uploadBulkCsv(file, p.getName());
-        return ResponseEntity.ok(new SuccessResponse("Bulk upload processed successfully"));
+        OutreachService.BulkUploadResult result = outreachService.uploadBulkCsv(file, p.getName());
+        return ResponseEntity.ok(new SuccessResponse(
+                "Bulk upload complete: " + result.saved() + " saved, " + result.skipped() + " skipped."
+        ));
     }
 }

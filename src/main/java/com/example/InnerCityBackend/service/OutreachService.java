@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,14 +28,15 @@ public class OutreachService {
     // FIX: Added the missing GeoCodingService injection
     private final GeoCodingService geoCodingService;
 
+    public record BulkUploadResult(int saved, int skipped) {}
+
     @Transactional
     public OutreachResponse createOutreach(CreateOutreachRequest req, String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new BusinessException("User not found"));
         Subcategory sub = subcategoryRepository.findById(req.getSubcategoryId())
                 .orElseThrow(() -> new BusinessException("Subcategory not found"));
 
-        // Logic for "Auto-Pinpointing":
-        // If the frontend didn't send coordinates (user typed address), we get them here.
+
         Double lat = req.getLatitude();
         Double lng = req.getLongitude();
 
@@ -64,45 +67,133 @@ public class OutreachService {
         return mapToResponse(outreachRepository.save(outreach));
     }
 
+
+    // 2. Change method signature from void → BulkUploadResult
     @Transactional
-    public void uploadBulkCsv(MultipartFile file, String adminEmail) {
-        User admin = userRepository.findByEmail(adminEmail).orElseThrow(() -> new BusinessException("Admin not found"));
+    public BulkUploadResult uploadBulkCsv(MultipartFile file, String adminEmail) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new BusinessException("Admin not found"));
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            reader.readLine(); // Skip Header
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream()))) {
+
+            String headerLine = reader.readLine();
+            if (headerLine == null) throw new BusinessException("CSV file is empty");
+
             String line;
+            int saved = 0;
+            int skipped = 0;
+
             while ((line = reader.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data.length < 4) continue; // Basic validation
+                if (line.isBlank()) continue;
 
-                String address = data[3].trim();
-                Subcategory sub = subcategoryRepository.findById(data[2].trim()).orElse(null);
+                String[] data = parseCsvLine(line);
 
-                if (sub == null) continue;
+                if (data.length < 9) { skipped++; continue; }
 
-                // AUTOMATIC PINPOINTING FOR CSV
-                double[] coords = geoCodingService.getCoordinates(address);
+                String subcategoryId = data[3].trim();
+                Subcategory sub = subcategoryRepository.findById(subcategoryId).orElse(null);
+                if (sub == null) { skipped++; continue; }
+
+                String fullAddress = data[4].trim();
+                String continent   = data[5].trim();
+                String country     = data[6].trim();
+                String state       = data[7].trim();
+                String city        = data[8].trim();
+
+                Double lat = null, lng = null;
+                if (data.length > 9 && data[9].toUpperCase().startsWith("POINT")) {
+                    try {
+                        String point = data[9].trim()
+                                .replace("POINT (", "").replace("POINT(", "").replace(")", "");
+                        String[] coords = point.split(" ");
+                        lng = Double.parseDouble(coords[0]);
+                        lat = Double.parseDouble(coords[1]);
+                    } catch (Exception ignored) {}
+                }
+                if (lat == null || lng == null) {
+                    double[] coords = geoCodingService.getCoordinates(fullAddress);
+                    lat = coords[0];
+                    lng = coords[1];
+                }
+
+                LocalDateTime startDate = null, endDate = null;
+                if (data.length > 10 && !data[10].isBlank()) {
+                    try { startDate = LocalDateTime.parse(data[10].trim()); } catch (Exception ignored) {}
+                }
+                if (data.length > 11 && !data[11].isBlank()) {
+                    try { endDate = LocalDateTime.parse(data[11].trim()); } catch (Exception ignored) {}
+                }
+
+                int beneficiaries = 0, volunteers = 0;
+                if (data.length > 13 && !data[13].isBlank()) {
+                    try { beneficiaries = Integer.parseInt(data[13].trim()); } catch (Exception ignored) {}
+                }
+                if (data.length > 14 && !data[14].isBlank()) {
+                    try { volunteers = Integer.parseInt(data[14].trim()); } catch (Exception ignored) {}
+                }
 
                 Outreach outreach = Outreach.builder()
-                        .title(data[0].trim())
-                        .description(data[1].trim())
-                        .fullAddress(address)
-                        .latitude(coords[0])
-                        .longitude(coords[1])
-                        .country(data[4].trim())
-                        .state(data[5].trim())
-                        .city(data[6].trim())
+                        .title(data[1].trim())
+                        .description(data[2].trim())
+                        .fullAddress(fullAddress)
+                        .continent(continent)
+                        .country(country)
+                        .state(state)
+                        .city(city)
+                        .latitude(lat)
+                        .longitude(lng)
+                        .startDate(startDate)
+                        .endDate(endDate)
+                        .beneficiariesCount(beneficiaries)
+                        .volunteersCount(volunteers)
+                        .subcategory(sub)
                         .createdBy(admin.getId())
                         .status(OutreachStatus.UPCOMING)
-                        .approvalStatus(ApprovalStatus.APPROVED) // Bulk uploads by admin are auto-approved
+                        .approvalStatus(ApprovalStatus.APPROVED)
                         .build();
 
                 outreachRepository.save(outreach);
+                saved++;
             }
+
+            // 3. Return result instead of printing
+            return new BulkUploadResult(saved, skipped);
+
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
             throw new BusinessException("CSV Processing failed: " + e.getMessage());
         }
     }
+
+    private String[] parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        boolean inQuotes = false;
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                // Handle escaped quote ""
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    sb.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == ',' && !inQuotes) {
+                fields.add(sb.toString());
+                sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
+        }
+        fields.add(sb.toString()); // last field
+        return fields.toArray(new String[0]);
+    }
+
+
 
     @Transactional
     public OutreachResponse updateOutreach(String id, UpdateOutreachRequest req) {
