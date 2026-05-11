@@ -59,7 +59,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/subcategories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/subcategories/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/outreach/**").permitAll()
+                        // OUTREACH
+                        .requestMatchers(HttpMethod.GET, "/api/v1/outreaches/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/outreaches").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/outreaches/bulk-upload").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/outreaches/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/outreaches/*/approve").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/outreaches/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/subcategories/**").permitAll()
 
