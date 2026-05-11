@@ -23,4 +23,10 @@ public class UpdateOutreachRequest {
 
     @JsonProperty("end_date")
     private LocalDateTime endDate;
+
+    @JsonProperty("beneficiaries_count")
+    private Integer beneficiariesCount;
+
+    @JsonProperty("volunteers_count")
+    private Integer volunteersCount;
 }

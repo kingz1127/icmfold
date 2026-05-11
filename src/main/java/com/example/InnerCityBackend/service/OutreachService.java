@@ -217,6 +217,10 @@ public class OutreachService {
         if (req.getStartDate() != null) o.setStartDate(req.getStartDate());
         if (req.getEndDate() != null) o.setEndDate(req.getEndDate());
 
+        if (req.getBeneficiariesCount() != null) o.setBeneficiariesCount(req.getBeneficiariesCount());
+        if (req.getVolunteersCount() != null) o.setVolunteersCount(req.getVolunteersCount());
+
+
         if (req.getStatus() != null) {
             o.setStatus(OutreachStatus.valueOf(req.getStatus().toUpperCase()));
         }
@@ -252,12 +256,7 @@ public class OutreachService {
         outreachRepository.deleteById(id);
     }
 
-    @Transactional
-    public void updateBeneficiariesCount(String id, Integer count) {
-        Outreach o = outreachRepository.findById(id).orElseThrow(() -> new BusinessException("Not found"));
-        o.setBeneficiariesCount(count);
-        outreachRepository.save(o);
-    }
+
 
     private OutreachResponse mapToResponse(Outreach o) {
         CategoryResponse catDto = CategoryResponse.builder()
