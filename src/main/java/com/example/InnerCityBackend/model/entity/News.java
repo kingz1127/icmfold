@@ -13,8 +13,9 @@ public class News extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String title;
+
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;

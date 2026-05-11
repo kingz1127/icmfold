@@ -4,6 +4,7 @@ import com.example.InnerCityBackend.exception.BusinessException;
 import com.example.InnerCityBackend.model.dto.request.UpdateProfileRequest;
 import com.example.InnerCityBackend.model.dto.response.UserResponse;
 import com.example.InnerCityBackend.model.entity.User;
+import com.example.InnerCityBackend.model.enums.Gender;
 import com.example.InnerCityBackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,60 +27,80 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("User not found"));
 
-
+        // Update fields if provided
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
-        if (request.getCountry() != null) user.setCountry(request.getCountry());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
         if (request.getAddress() != null) user.setAddress(request.getAddress());
         if (request.getCity() != null) user.setCity(request.getCity());
         if (request.getState() != null) user.setState(request.getState());
+        if (request.getCountry() != null) user.setCountry(request.getCountry());
         if (request.getZipCode() != null) user.setZipCode(request.getZipCode());
         if (request.getBio() != null) user.setBio(request.getBio());
 
-
-        if (request.getDateOfBirth() != null) {
-            user.setDateOfBirth(request.getDateOfBirth());
-        }
-
-        if (image != null && !image.isEmpty()) {
+        // Convert String to LocalDate
+        if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
             try {
-                String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
-                user.setAvatar("data:" + image.getContentType() + ";base64," + base64Image);
-            } catch (IOException e) {
-                throw new BusinessException("Could not process image upload");
+                LocalDate dateOfBirth = LocalDate.parse(request.getDateOfBirth());
+                user.setDateOfBirth(dateOfBirth);
+            } catch (Exception e) {
+                throw new BusinessException("Invalid date format. Please use yyyy-MM-dd");
             }
         }
 
-        User updatedUser = userRepository.save(user);
-        return mapToResponse(updatedUser);
+        // Convert String to Gender Enum
+        if (request.getGender() != null && !request.getGender().isEmpty()) {
+            try {
+                Gender gender = Gender.valueOf(request.getGender().toUpperCase());
+                user.setGender(gender);
+            } catch (IllegalArgumentException e) {
+                throw new BusinessException("Invalid gender value. Allowed values: MALE, FEMALE, OTHER");
+            }
+        }
+
+        // Handle avatar image
+        if (image != null && !image.isEmpty()) {
+            user.setAvatar(processImage(image));
+        }
+
+        return mapToResponse(userRepository.save(user));
     }
 
-    public UserResponse mapToResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole().name())
-                .gender(user.getGender() != null ? user.getGender().name() : null)
-                .country(user.getCountry())
-                .avatar(user.getAvatar())
-                .bio(user.getBio())
-                .address(user.getAddress())
-                .city(user.getCity())
-                .state(user.getState())
-                .zipCode(user.getZipCode())
-                .dateOfBirth(user.getDateOfBirth())
-                .emailVerified(user.isEmailVerified())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+    private String processImage(MultipartFile file) {
+        try {
+            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+            return "data:" + file.getContentType() + ";base64," + base64Image;
+        } catch (IOException e) {
+            throw new BusinessException("Failed to upload image file");
+        }
     }
 
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("User not found"));
         return mapToResponse(user);
+    }
+
+    private UserResponse mapToResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
+                .address(user.getAddress())
+                .city(user.getCity())
+                .state(user.getState())
+                .country(user.getCountry())
+                .zipCode(user.getZipCode())
+                .bio(user.getBio())
+                .avatar(user.getAvatar())
+                .dateOfBirth(LocalDate.parse(Optional.ofNullable(user.getDateOfBirth()).map(LocalDate::toString).orElse(null)))
+                .gender(Optional.ofNullable(user.getGender()).map(Enum::toString).orElse(null))
+                .role(Optional.ofNullable(user.getRole()).map(Enum::name).orElse(null))
+                .emailVerified(user.isEmailVerified())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 }

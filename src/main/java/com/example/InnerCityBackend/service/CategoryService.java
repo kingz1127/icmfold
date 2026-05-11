@@ -7,10 +7,14 @@ import com.example.InnerCityBackend.model.dto.response.CategoryResponse;
 import com.example.InnerCityBackend.model.dto.response.CategoryWithSubcategoriesResponse;
 import com.example.InnerCityBackend.model.dto.response.SubcategoryResponse;
 import com.example.InnerCityBackend.model.entity.Category;
+import com.example.InnerCityBackend.model.entity.Subcategory;
 import com.example.InnerCityBackend.repository.CategoryRepository;
+import com.example.InnerCityBackend.repository.SubcategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
+    private final SubcategoryRepository subcategoryRepository;
 
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest req) {
@@ -76,5 +81,30 @@ public class CategoryService {
                 .name(c.getName())
                 .description(c.getDescription())
                 .build();
+    }
+
+    @Transactional
+    public void deleteCategory(String id) {
+        // First check if any subcategory has outreaches
+        boolean hasOutreaches = subcategoryRepository.existsSubcategoryWithOutreachesByCategoryId(id);
+
+        if (hasOutreaches) {
+            throw new BusinessException(
+                    "Cannot delete category because some subcategories have associated outreaches. " +
+                            "Please delete the outreaches first."
+            );
+        }
+
+        // Check if category has any subcategories
+        boolean hasSubcategories = subcategoryRepository.existsByCategoryId(id);
+
+        if (hasSubcategories) {
+            // Delete all subcategories first
+            List<Subcategory> subcategories = subcategoryRepository.findByCategoryId(id);
+            subcategoryRepository.deleteAll(subcategories);
+        }
+
+        // Then delete the category
+        categoryRepository.deleteById(id);
     }
 }

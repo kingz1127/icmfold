@@ -30,8 +30,22 @@ public class NewsController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NewsResponse> createNews(
             Principal principal,
-            @RequestPart("data") @Valid CreateNewsRequest request,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam("categoryId") String categoryId,
+            @RequestParam(value = "continent", required = false) String continent,
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "isGlobal", defaultValue = "false") boolean isGlobal,
             @RequestPart(value = "image", required = false) MultipartFile image) {
+
+        CreateNewsRequest request = CreateNewsRequest.builder()
+                .title(title)
+                .content(content)
+                .categoryId(categoryId)
+                .continent(continent)
+                .country(country)
+                .isGlobal(isGlobal)
+                .build();
 
         return ResponseEntity.ok(newsService.createNews(request, image, principal.getName()));
     }
@@ -41,8 +55,22 @@ public class NewsController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NewsResponse> updateNews(
             @PathVariable String id,
-            @RequestPart("data") UpdateNewsRequest request,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "content", required = false) String content,
+            @RequestParam(value = "categoryId", required = false) String categoryId,
+            @RequestParam(value = "continent", required = false) String continent,
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "isGlobal", required = false) Boolean isGlobal,
             @RequestPart(value = "image", required = false) MultipartFile image) {
+
+        UpdateNewsRequest request = UpdateNewsRequest.builder()
+                .title(title)
+                .content(content)
+                .categoryId(categoryId)
+                .continent(continent)
+                .country(country)
+                .isGlobal(isGlobal)
+                .build();
 
         return ResponseEntity.ok(newsService.updateNews(id, request, image));
     }

@@ -23,7 +23,7 @@ public class Category extends BaseEntity {
 
     private String description;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "category", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, orphanRemoval = false)
     private List<Subcategory> subcategories;
 }
 

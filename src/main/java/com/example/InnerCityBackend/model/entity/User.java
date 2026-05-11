@@ -49,10 +49,10 @@ public class User extends BaseEntity implements UserDetails {
 
     private String provider;
 
-    @Column(name = "avatar", length = 500)
+    @Column(columnDefinition = "TEXT")  // FIXED: Changed from length=500
     private String avatar;
 
-    @Column(name = "bio", length = 500)
+    @Column(columnDefinition = "TEXT")
     private String bio;
 
     @Column(name = "email_verified")

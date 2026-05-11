@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,56 +22,73 @@ public class PartnerService {
     private final PartnerRepository partnerRepository;
 
     @Transactional
-    public PartnerResponse createPartner(PartnerRequest request, MultipartFile file) {
+    public PartnerResponse createPartner(PartnerRequest request, MultipartFile image) {
         Partner partner = Partner.builder()
                 .partnerName(request.getPartnerName())
                 .build();
 
-        if (file != null && !file.isEmpty()) {
-            partner.setPartnerImage(convertImage(file));
+        // Handle image upload
+        if (image != null && !image.isEmpty()) {
+            partner.setPartnerImage(processImage(image));
         }
 
         return mapToResponse(partnerRepository.save(partner));
     }
 
     @Transactional
-    public PartnerResponse updatePartner(String id, PartnerRequest request, MultipartFile file) {
+    public PartnerResponse updatePartner(String id, PartnerRequest request, MultipartFile image) {
         Partner partner = partnerRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Partner not found"));
 
-        partner.setPartnerName(request.getPartnerName());
+        if (request.getPartnerName() != null) {
+            partner.setPartnerName(request.getPartnerName());
+        }
 
-        if (file != null && !file.isEmpty()) {
-            partner.setPartnerImage(convertImage(file));
+        // Update image only if a new one is uploaded
+        if (image != null && !image.isEmpty()) {
+            partner.setPartnerImage(processImage(image));
         }
 
         return mapToResponse(partnerRepository.save(partner));
     }
 
+    private String processImage(MultipartFile file) {
+        try {
+            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+            return "data:" + file.getContentType() + ";base64," + base64Image;
+        } catch (IOException e) {
+            throw new BusinessException("Failed to upload image file");
+        }
+    }
+
     public List<PartnerResponse> getAll() {
-        return partnerRepository.findAll().stream().map(this::mapToResponse).toList();
+        return partnerRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public PartnerResponse getById(String id) {
+        Partner partner = partnerRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Partner not found"));
+        return mapToResponse(partner);
     }
 
     @Transactional
     public void delete(String id) {
+        if (!partnerRepository.existsById(id)) {
+            throw new BusinessException("Cannot delete: Partner not found");
+        }
         partnerRepository.deleteById(id);
     }
 
-    private String convertImage(MultipartFile file) {
-        try {
-            return "data:" + file.getContentType() + ";base64," +
-                    Base64.getEncoder().encodeToString(file.getBytes());
-        } catch (IOException e) {
-            throw new BusinessException("Image upload failed");
-        }
-    }
-
-    private PartnerResponse mapToResponse(Partner p) {
+    private PartnerResponse mapToResponse(Partner partner) {
         return PartnerResponse.builder()
-                .id(p.getId())
-                .partnerName(p.getPartnerName())
-                .partnerImage(p.getPartnerImage())
-                .createdAt(p.getCreatedAt())
+                .id(partner.getId())
+                .partnerName(partner.getPartnerName())
+                .partnerImage(partner.getPartnerImage())
+                .createdAt(partner.getCreatedAt())
+                .updatedAt(partner.getUpdatedAt())
                 .build();
     }
 }

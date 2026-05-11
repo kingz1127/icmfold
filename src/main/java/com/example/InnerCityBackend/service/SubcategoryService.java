@@ -8,6 +8,7 @@ import com.example.InnerCityBackend.model.dto.response.SubcategoryResponse;
 import com.example.InnerCityBackend.model.entity.Category;
 import com.example.InnerCityBackend.model.entity.Subcategory;
 import com.example.InnerCityBackend.repository.CategoryRepository;
+import com.example.InnerCityBackend.repository.OutreachRepository;
 import com.example.InnerCityBackend.repository.SubcategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SubcategoryService {
-    private final SubcategoryRepository subRepository;
+    private final SubcategoryRepository subcategoryRepository;  // Only one!
     private final CategoryRepository categoryRepository;
+    private final OutreachRepository outreachRepository;
 
     @Transactional
     public SubcategoryResponse create(CreateSubcategoryRequest req) {
@@ -33,12 +35,12 @@ public class SubcategoryService {
                 .category(cat)
                 .build();
 
-        return mapToResponse(subRepository.save(sub));
+        return mapToResponse(subcategoryRepository.save(sub));
     }
 
     @Transactional
     public SubcategoryResponse update(String id, UpdateSubcategoryRequest req) {
-        Subcategory sub = subRepository.findById(id)
+        Subcategory sub = subcategoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Subcategory not found"));
 
         if (req.getName() != null) sub.setName(req.getName());
@@ -50,24 +52,38 @@ public class SubcategoryService {
             sub.setCategory(cat);
         }
 
-        return mapToResponse(subRepository.save(sub));
+        return mapToResponse(subcategoryRepository.save(sub));
     }
 
     public List<SubcategoryResponse> getAll() {
-        return subRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return subcategoryRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     public List<SubcategoryResponse> getByCategoryId(String categoryId) {
-        return subRepository.findByCategoryId(categoryId).stream().map(this::mapToResponse).collect(Collectors.toList());
+        return subcategoryRepository.findByCategoryId(categoryId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional
     public void deleteSubcategory(String id) {
-        subRepository.deleteById(id);
+        // Check if subcategory has any outreaches
+        boolean hasOutreaches = outreachRepository.existsBySubcategoryId(id);
+
+        if (hasOutreaches) {
+            long outreachCount = outreachRepository.countBySubcategoryId(id);
+            throw new BusinessException(
+                    String.format("Cannot delete subcategory because it has %d outreach(s) associated with it. " +
+                            "Please delete or reassign the outreaches first.", outreachCount)
+            );
+        }
+
+        subcategoryRepository.deleteById(id);
     }
 
     private SubcategoryResponse mapToResponse(Subcategory s) {
-        // Create the CategoryResponse object to satisfy the DTO type
         CategoryResponse catDto = CategoryResponse.builder()
                 .id(s.getCategory().getId())
                 .name(s.getCategory().getName())
