@@ -80,7 +80,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/partners/**").hasRole("ADMIN")
 
-                        // All other requests require authentication
+
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)

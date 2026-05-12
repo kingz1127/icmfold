@@ -15,7 +15,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/outreaches")
+@RequestMapping("outreaches")
 @Tag(name = "Outreach Controller", description = "Management of community events")
 @RequiredArgsConstructor
 public class OutreachController {
