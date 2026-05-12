@@ -17,7 +17,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -35,14 +34,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api-docs", "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
+                        // Public endpoints (no authentication required)
                         .requestMatchers(
-                                "/auth/**",
+                                "/auth/**",           // This matches your AuthController
                                 "/error",
+                                "/api-docs",
+                                "/api-docs/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -50,34 +47,40 @@ public class SecurityConfig {
                                 "/swagger-resources/**"
                         ).permitAll()
 
-                        // ADD /api/v1 prefix to all these paths
-                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
+                        // Handle preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/subcategories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/subcategories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/subcategories/**").hasRole("ADMIN")
+                        // Public GET endpoints - NO /api/v1 prefix
+                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/subcategories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/outreaches/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/partners/**").permitAll()
 
-                        // OUTREACH
-                        .requestMatchers(HttpMethod.GET, "/api/v1/outreaches/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/outreaches").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/outreaches/bulk-upload").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/outreaches/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/outreaches/*/approve").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/outreaches/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/subcategories/**").permitAll()
+                        // Authenticated endpoints (any logged-in user)
+                        .requestMatchers(HttpMethod.POST, "/outreaches").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/news/**").permitAll()
+                        // Admin-only endpoints
+                        .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/news/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/subcategories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/subcategories/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/partners/**").permitAll()
-                        .requestMatchers("/api/v1/partners/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/outreaches/bulk-upload").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/outreaches/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/outreaches/*/approve").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/outreaches/**").hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.POST, "/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/news/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/news/**").hasRole("ADMIN")
+
+                        .requestMatchers("/partners/**").hasRole("ADMIN")
+
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
@@ -99,7 +102,8 @@ public class SecurityConfig {
         ));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization", "Content-Type", "Accept",
-                "X-Requested-With", "Origin"
+                "X-Requested-With", "Origin", "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
         ));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(true);

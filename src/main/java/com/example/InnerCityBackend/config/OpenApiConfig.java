@@ -30,7 +30,7 @@ public class OpenApiConfig {
                                 .url("https://icmfold.onrender.com/api/v1")
                                 .description("Production Server"),
                         new Server()
-                                .url("http://localhost:8080/api/v1")
+                                .url("http://localhost:8080")
                                 .description("Local Development")
                 ))
                 // ADD THIS SECURITY CONFIGURATION
