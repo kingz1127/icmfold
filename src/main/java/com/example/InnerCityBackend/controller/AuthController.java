@@ -4,9 +4,11 @@ import com.example.InnerCityBackend.model.dto.request.*;
 import com.example.InnerCityBackend.model.dto.response.AuthResponse;
 import com.example.InnerCityBackend.model.dto.response.SuccessResponse;
 import com.example.InnerCityBackend.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.builder.ToStringSummary;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +24,8 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/signup")
+    @PostMapping("/signup") @Operation(
+            summary = "Signup here (Register a new user account and password must be at least 8 characters)")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest request) {
         return ResponseEntity.ok(authService.signup(request));
     }
