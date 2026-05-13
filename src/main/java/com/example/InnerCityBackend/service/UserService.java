@@ -106,6 +106,188 @@
 //}
 
 
+//package com.example.InnerCityBackend.service;
+//
+//import com.example.InnerCityBackend.exception.BusinessException;
+//import com.example.InnerCityBackend.model.dto.request.UpdateProfileRequest;
+//import com.example.InnerCityBackend.model.dto.response.UserResponse;
+//import com.example.InnerCityBackend.model.entity.User;
+//import com.example.InnerCityBackend.model.enums.Gender;
+//import com.example.InnerCityBackend.repository.UserRepository;
+//import lombok.RequiredArgsConstructor;
+//import lombok.extern.slf4j.Slf4j;
+//import org.springframework.stereotype.Service;
+//import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.web.multipart.MultipartFile;
+//
+//import java.io.IOException;
+//import java.time.LocalDate;
+//import java.util.Base64;
+//
+//@Service
+//@RequiredArgsConstructor
+//@Slf4j
+//public class UserService {
+//
+//    private final UserRepository userRepository;
+//
+//    @Transactional
+//    public UserResponse updateProfile(String email, UpdateProfileRequest request, MultipartFile image) {
+//        try {
+//            log.info("Updating profile for user: {}", email);
+//
+//            User user = userRepository.findByEmail(email)
+//                    .orElseThrow(() -> new BusinessException("User not found"));
+//
+//            // Update fields if provided
+//            if (request.getFirstName() != null && !request.getFirstName().trim().isEmpty()) {
+//                user.setFirstName(request.getFirstName().trim());
+//            }
+//
+//            if (request.getLastName() != null && !request.getLastName().trim().isEmpty()) {
+//                user.setLastName(request.getLastName().trim());
+//            }
+//
+//            if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+//                user.setPhone(request.getPhone().trim());
+//            }
+//
+//            if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+//                user.setAddress(request.getAddress().trim());
+//            }
+//
+//            if (request.getCity() != null && !request.getCity().trim().isEmpty()) {
+//                user.setCity(request.getCity().trim());
+//            }
+//
+//            if (request.getState() != null && !request.getState().trim().isEmpty()) {
+//                user.setState(request.getState().trim());
+//            }
+//
+//            if (request.getCountry() != null && !request.getCountry().trim().isEmpty()) {
+//                user.setCountry(request.getCountry().trim());
+//            }
+//
+//            if (request.getZipCode() != null && !request.getZipCode().trim().isEmpty()) {
+//                user.setZipCode(request.getZipCode().trim());
+//            }
+//
+//            if (request.getBio() != null && !request.getBio().trim().isEmpty()) {
+//                user.setBio(request.getBio().trim());
+//            }
+//
+//            // Convert String to LocalDate
+//            if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
+//                try {
+//                    LocalDate dateOfBirth = LocalDate.parse(request.getDateOfBirth());
+//                    user.setDateOfBirth(dateOfBirth);
+//                    log.debug("Set date of birth: {}", dateOfBirth);
+//                } catch (Exception e) {
+//                    log.warn("Invalid date format: {}", request.getDateOfBirth());
+//                    throw new BusinessException("Invalid date format. Please use yyyy-MM-dd");
+//                }
+//            }
+//
+//            // Convert String to Gender Enum
+//            if (request.getGender() != null && !request.getGender().isEmpty()) {
+//                try {
+//                    Gender gender = Gender.valueOf(request.getGender().toUpperCase());
+//                    user.setGender(gender);
+//                    log.debug("Set gender: {}", gender);
+//                } catch (IllegalArgumentException e) {
+//                    throw new BusinessException("Invalid gender value. Allowed values: MALE, FEMALE, OTHER");
+//                }
+//            }
+//
+//            // Handle avatar image
+//            if (image != null && !image.isEmpty()) {
+//                String avatarBase64 = processImage(image);
+//                user.setAvatar(avatarBase64);
+//                log.debug("Updated avatar image");
+//            }
+//
+//            User savedUser = userRepository.save(user);
+//            log.info("Successfully updated profile for user: {}", email);
+//
+//            return mapToResponse(savedUser);
+//
+//        } catch (BusinessException e) {
+//            throw e;
+//        } catch (Exception e) {
+//            log.error("Error updating profile for user {}: {}", email, e.getMessage(), e);
+//            throw new BusinessException("Failed to update profile: " + e.getMessage());
+//        }
+//    }
+//
+//    private String processImage(MultipartFile file) {
+//        try {
+//            // Validate file size (max 5MB)
+//            if (file.getSize() > 5 * 1024 * 1024) {
+//                throw new BusinessException("Image size should be less than 5MB");
+//            }
+//
+//            // Validate file type
+//            String contentType = file.getContentType();
+//            if (contentType == null || (!contentType.startsWith("image/") && !contentType.equals("image/svg+xml"))) {
+//                throw new BusinessException("Only image files are allowed");
+//            }
+//
+//            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+//            return "data:" + contentType + ";base64," + base64Image;
+//        } catch (IOException e) {
+//            log.error("Failed to process image: {}", e.getMessage(), e);
+//            throw new BusinessException("Failed to upload image file");
+//        }
+//    }
+//
+//    @Transactional(readOnly = true)
+//    public UserResponse getUserByEmail(String email) {
+//        try {
+//            log.debug("Fetching user by email: {}", email);
+//
+//            User user = userRepository.findByEmail(email)
+//                    .orElseThrow(() -> new BusinessException("User not found with email: " + email));
+//
+//            return mapToResponse(user);
+//
+//        } catch (BusinessException e) {
+//            throw e;
+//        } catch (Exception e) {
+//            log.error("Error fetching user by email {}: {}", email, e.getMessage(), e);
+//            throw new BusinessException("Failed to fetch user: " + e.getMessage());
+//        }
+//    }
+//
+//    private UserResponse mapToResponse(User user) {
+//        if (user == null) {
+//            return null;
+//        }
+//
+//        return UserResponse.builder()
+//                .id(user.getId())
+//                .email(user.getEmail())
+//                .firstName(user.getFirstName())
+//                .lastName(user.getLastName())
+//                .phone(user.getPhone())
+//                .address(user.getAddress())
+//                .city(user.getCity())
+//                .state(user.getState())
+//                .country(user.getCountry())
+//                .zipCode(user.getZipCode())
+//                .bio(user.getBio())
+//                .avatar(user.getAvatar())
+//                .dateOfBirth(user.getDateOfBirth())
+//                .gender(user.getGender() != null ? user.getGender().name() : null)
+//                .role(user.getRole() != null ? user.getRole().name() : null)
+//                .emailVerified(user.isEmailVerified())
+//                .createdAt(user.getCreatedAt())
+//                .updatedAt(user.getUpdatedAt())
+//                .build();
+//    }
+//}
+
+
+
 package com.example.InnerCityBackend.service;
 
 import com.example.InnerCityBackend.exception.BusinessException;
@@ -139,71 +321,85 @@ public class UserService {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new BusinessException("User not found"));
 
-            // Update fields if provided
-            if (request.getFirstName() != null && !request.getFirstName().trim().isEmpty()) {
+            // Update only the fields that are provided (not null)
+            if (request.getFirstName() != null) {
                 user.setFirstName(request.getFirstName().trim());
+                log.debug("Updated firstName");
             }
 
-            if (request.getLastName() != null && !request.getLastName().trim().isEmpty()) {
+            if (request.getLastName() != null) {
                 user.setLastName(request.getLastName().trim());
+                log.debug("Updated lastName");
             }
 
-            if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            if (request.getPhone() != null) {
                 user.setPhone(request.getPhone().trim());
+                log.debug("Updated phone");
             }
 
-            if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+            if (request.getAddress() != null) {
                 user.setAddress(request.getAddress().trim());
+                log.debug("Updated address");
             }
 
-            if (request.getCity() != null && !request.getCity().trim().isEmpty()) {
+            if (request.getCity() != null) {
                 user.setCity(request.getCity().trim());
+                log.debug("Updated city");
             }
 
-            if (request.getState() != null && !request.getState().trim().isEmpty()) {
+            if (request.getState() != null) {
                 user.setState(request.getState().trim());
+                log.debug("Updated state");
             }
 
-            if (request.getCountry() != null && !request.getCountry().trim().isEmpty()) {
+            if (request.getCountry() != null) {
                 user.setCountry(request.getCountry().trim());
+                log.debug("Updated country");
             }
 
-            if (request.getZipCode() != null && !request.getZipCode().trim().isEmpty()) {
+            if (request.getZipCode() != null) {
                 user.setZipCode(request.getZipCode().trim());
+                log.debug("Updated zipCode");
             }
 
-            if (request.getBio() != null && !request.getBio().trim().isEmpty()) {
+            if (request.getBio() != null) {
                 user.setBio(request.getBio().trim());
+                log.debug("Updated bio");
             }
 
-            // Convert String to LocalDate
+            // Handle date of birth (only if provided and not empty)
             if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
                 try {
                     LocalDate dateOfBirth = LocalDate.parse(request.getDateOfBirth());
                     user.setDateOfBirth(dateOfBirth);
-                    log.debug("Set date of birth: {}", dateOfBirth);
+                    log.debug("Updated dateOfBirth: {}", dateOfBirth);
                 } catch (Exception e) {
                     log.warn("Invalid date format: {}", request.getDateOfBirth());
                     throw new BusinessException("Invalid date format. Please use yyyy-MM-dd");
                 }
             }
 
-            // Convert String to Gender Enum
+            // Handle gender (only if provided and not empty)
             if (request.getGender() != null && !request.getGender().isEmpty()) {
                 try {
                     Gender gender = Gender.valueOf(request.getGender().toUpperCase());
                     user.setGender(gender);
-                    log.debug("Set gender: {}", gender);
+                    log.debug("Updated gender: {}", gender);
                 } catch (IllegalArgumentException e) {
                     throw new BusinessException("Invalid gender value. Allowed values: MALE, FEMALE, OTHER");
                 }
             }
 
-            // Handle avatar image
+            // Handle avatar image (only if provided)
             if (image != null && !image.isEmpty()) {
-                String avatarBase64 = processImage(image);
-                user.setAvatar(avatarBase64);
-                log.debug("Updated avatar image");
+                try {
+                    String avatarBase64 = processImage(image);
+                    user.setAvatar(avatarBase64);
+                    log.debug("Updated avatar image");
+                } catch (Exception e) {
+                    log.error("Failed to process image: {}", e.getMessage());
+                    throw new BusinessException("Failed to process image: " + e.getMessage());
+                }
             }
 
             User savedUser = userRepository.save(user);
@@ -229,14 +425,20 @@ public class UserService {
             // Validate file type
             String contentType = file.getContentType();
             if (contentType == null || (!contentType.startsWith("image/") && !contentType.equals("image/svg+xml"))) {
-                throw new BusinessException("Only image files are allowed");
+                throw new BusinessException("Only image files are allowed. Supported types: JPEG, PNG, GIF, SVG");
             }
 
-            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-            return "data:" + contentType + ";base64," + base64Image;
+            // Convert to Base64
+            byte[] bytes = file.getBytes();
+            String base64Image = Base64.getEncoder().encodeToString(bytes);
+            String result = "data:" + contentType + ";base64," + base64Image;
+
+            log.debug("Image processed successfully. Size: {} bytes, Type: {}", bytes.length, contentType);
+            return result;
+
         } catch (IOException e) {
-            log.error("Failed to process image: {}", e.getMessage(), e);
-            throw new BusinessException("Failed to upload image file");
+            log.error("Failed to read image file: {}", e.getMessage());
+            throw new BusinessException("Failed to read image file");
         }
     }
 
