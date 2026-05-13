@@ -1,5 +1,6 @@
 package com.example.InnerCityBackend.model.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,8 @@ public class CreateNewsRequest {
     @NotBlank(message = "Content is required")
     private String content;
 
-    private String categoryId;
+    @JsonProperty("category_id")
+    @NotBlank String categoryId;
     private String continent;
     private String country;
     private boolean isGlobal;

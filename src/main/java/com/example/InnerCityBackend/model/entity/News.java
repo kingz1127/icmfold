@@ -1,6 +1,8 @@
 package com.example.InnerCityBackend.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Entity
@@ -23,7 +25,9 @@ public class News extends BaseEntity {
     @Column(columnDefinition = "TEXT",  name = "image_url") // Important for storing Base64 data
     private String image_url;
 
-    private String categoryId;
+    @JsonProperty("category_id")
+    @NotBlank
+    String categoryId;
 
     private String continent;
 
