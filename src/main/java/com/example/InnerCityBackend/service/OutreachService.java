@@ -416,6 +416,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -504,7 +505,14 @@ public class OutreachService {
             if (req.getEndDate() != null) o.setEndDate(req.getEndDate());
             if (req.getBeneficiariesCount() != null) o.setBeneficiariesCount(req.getBeneficiariesCount());
             if (req.getVolunteersCount() != null) o.setVolunteersCount(req.getVolunteersCount());
-            if (req.getStatus() != null) o.setStatus(OutreachStatus.valueOf(req.getStatus().toUpperCase()));
+            if (req.getStatus() != null) {
+                try {
+                    o.setStatus(OutreachStatus.valueOf(req.getStatus().toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new BusinessException("Invalid status value: '" + req.getStatus() +
+                            "'. Valid values are: " + Arrays.toString(OutreachStatus.values()));
+                }
+            }
 
             return outreachMapper.toResponse(outreachRepository.save(o));
 
