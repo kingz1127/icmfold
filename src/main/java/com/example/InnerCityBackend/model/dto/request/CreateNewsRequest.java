@@ -20,7 +20,10 @@ public class CreateNewsRequest {
 
     @JsonProperty("category_id")
     @NotBlank String categoryId;
+
     private String continent;
+
     private String country;
-    private boolean isGlobal;
+
+    private Boolean isGlobal;
 }

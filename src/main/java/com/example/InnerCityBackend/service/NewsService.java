@@ -30,13 +30,18 @@ public class NewsService {
         User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new BusinessException("Admin user not found"));
 
+        boolean isGlobal = false;
+        if (request.getIsGlobal() != null) {
+            isGlobal = request.getIsGlobal();
+        }
+
         News news = News.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .categoryId(request.getCategoryId())
                 .continent(request.getContinent())
                 .country(request.getCountry())
-                .isGlobal(request.isGlobal())
+                .isGlobal(isGlobal)
                 .createdBy(admin.getId())
                 .build();
 
@@ -44,6 +49,8 @@ public class NewsService {
         if (image != null && !image.isEmpty()) {
             news.setImage_url(processImage(image));
         }
+
+
 
         return mapToResponse(newsRepository.save(news));
     }
@@ -58,7 +65,12 @@ public class NewsService {
         if (request.getCategoryId() != null) news.setCategoryId(request.getCategoryId());
         if (request.getContinent() != null) news.setContinent(request.getContinent());
         if (request.getCountry() != null) news.setCountry(request.getCountry());
-        if (request.getIsGlobal() != null) news.setGlobal(request.getIsGlobal());
+
+        if (request.getIsGlobal() != null) {
+            news.setGlobal(request.getIsGlobal());
+        } else {
+            news.setGlobal(false); // default value
+        }
 
         // Update image only if a new one is uploaded
         if (image != null && !image.isEmpty()) {
