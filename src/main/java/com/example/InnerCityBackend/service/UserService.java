@@ -115,6 +115,7 @@ import com.example.InnerCityBackend.model.entity.User;
 import com.example.InnerCityBackend.model.enums.Gender;
 import com.example.InnerCityBackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -122,71 +123,146 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Base64;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
 
     @Transactional
     public UserResponse updateProfile(String email, UpdateProfileRequest request, MultipartFile image) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("User not found"));
+        try {
+            log.info("Updating profile for user: {}", email);
 
-        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
-        if (request.getLastName() != null) user.setLastName(request.getLastName());
-        if (request.getPhone() != null) user.setPhone(request.getPhone());
-        if (request.getAddress() != null) user.setAddress(request.getAddress());
-        if (request.getCity() != null) user.setCity(request.getCity());
-        if (request.getState() != null) user.setState(request.getState());
-        if (request.getCountry() != null) user.setCountry(request.getCountry());
-        if (request.getZipCode() != null) user.setZipCode(request.getZipCode());
-        if (request.getBio() != null) user.setBio(request.getBio());
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BusinessException("User not found"));
 
-        // Convert String to LocalDate
-        if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
-            try {
-                user.setDateOfBirth(LocalDate.parse(request.getDateOfBirth()));
-            } catch (Exception e) {
-                throw new BusinessException("Invalid date format. Please use yyyy-MM-dd");
+            // Update fields if provided
+            if (request.getFirstName() != null && !request.getFirstName().trim().isEmpty()) {
+                user.setFirstName(request.getFirstName().trim());
             }
-        }
 
-        // Convert String to Gender Enum
-        if (request.getGender() != null && !request.getGender().isEmpty()) {
-            try {
-                user.setGender(Gender.valueOf(request.getGender().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new BusinessException("Invalid gender value. Allowed values: MALE, FEMALE, OTHER");
+            if (request.getLastName() != null && !request.getLastName().trim().isEmpty()) {
+                user.setLastName(request.getLastName().trim());
             }
-        }
 
-        // Handle avatar image
-        if (image != null && !image.isEmpty()) {
-            user.setAvatar(processImage(image));
-        }
+            if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+                user.setPhone(request.getPhone().trim());
+            }
 
-        return mapToResponse(userRepository.save(user));
+            if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+                user.setAddress(request.getAddress().trim());
+            }
+
+            if (request.getCity() != null && !request.getCity().trim().isEmpty()) {
+                user.setCity(request.getCity().trim());
+            }
+
+            if (request.getState() != null && !request.getState().trim().isEmpty()) {
+                user.setState(request.getState().trim());
+            }
+
+            if (request.getCountry() != null && !request.getCountry().trim().isEmpty()) {
+                user.setCountry(request.getCountry().trim());
+            }
+
+            if (request.getZipCode() != null && !request.getZipCode().trim().isEmpty()) {
+                user.setZipCode(request.getZipCode().trim());
+            }
+
+            if (request.getBio() != null && !request.getBio().trim().isEmpty()) {
+                user.setBio(request.getBio().trim());
+            }
+
+            // Convert String to LocalDate
+            if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
+                try {
+                    LocalDate dateOfBirth = LocalDate.parse(request.getDateOfBirth());
+                    user.setDateOfBirth(dateOfBirth);
+                    log.debug("Set date of birth: {}", dateOfBirth);
+                } catch (Exception e) {
+                    log.warn("Invalid date format: {}", request.getDateOfBirth());
+                    throw new BusinessException("Invalid date format. Please use yyyy-MM-dd");
+                }
+            }
+
+            // Convert String to Gender Enum
+            if (request.getGender() != null && !request.getGender().isEmpty()) {
+                try {
+                    Gender gender = Gender.valueOf(request.getGender().toUpperCase());
+                    user.setGender(gender);
+                    log.debug("Set gender: {}", gender);
+                } catch (IllegalArgumentException e) {
+                    throw new BusinessException("Invalid gender value. Allowed values: MALE, FEMALE, OTHER");
+                }
+            }
+
+            // Handle avatar image
+            if (image != null && !image.isEmpty()) {
+                String avatarBase64 = processImage(image);
+                user.setAvatar(avatarBase64);
+                log.debug("Updated avatar image");
+            }
+
+            User savedUser = userRepository.save(user);
+            log.info("Successfully updated profile for user: {}", email);
+
+            return mapToResponse(savedUser);
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error updating profile for user {}: {}", email, e.getMessage(), e);
+            throw new BusinessException("Failed to update profile: " + e.getMessage());
+        }
     }
 
     private String processImage(MultipartFile file) {
         try {
+            // Validate file size (max 5MB)
+            if (file.getSize() > 5 * 1024 * 1024) {
+                throw new BusinessException("Image size should be less than 5MB");
+            }
+
+            // Validate file type
+            String contentType = file.getContentType();
+            if (contentType == null || (!contentType.startsWith("image/") && !contentType.equals("image/svg+xml"))) {
+                throw new BusinessException("Only image files are allowed");
+            }
+
             String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-            return "data:" + file.getContentType() + ";base64," + base64Image;
+            return "data:" + contentType + ";base64," + base64Image;
         } catch (IOException e) {
+            log.error("Failed to process image: {}", e.getMessage(), e);
             throw new BusinessException("Failed to upload image file");
         }
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("User not found"));
-        return mapToResponse(user);
+        try {
+            log.debug("Fetching user by email: {}", email);
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BusinessException("User not found with email: " + email));
+
+            return mapToResponse(user);
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching user by email {}: {}", email, e.getMessage(), e);
+            throw new BusinessException("Failed to fetch user: " + e.getMessage());
+        }
     }
 
     private UserResponse mapToResponse(User user) {
+        if (user == null) {
+            return null;
+        }
+
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -201,7 +277,7 @@ public class UserService {
                 .bio(user.getBio())
                 .avatar(user.getAvatar())
                 .dateOfBirth(user.getDateOfBirth())
-                .gender(user.getGender() != null ? user.getGender().toString() : null)
+                .gender(user.getGender() != null ? user.getGender().name() : null)
                 .role(user.getRole() != null ? user.getRole().name() : null)
                 .emailVerified(user.isEmailVerified())
                 .createdAt(user.getCreatedAt())

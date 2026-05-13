@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("subcategories")
+@RequestMapping("sub-categories")
 @RequiredArgsConstructor
 @Tag(name = "SubCategory Controller", description = "Admin access")
 public class SubcategoryController {
