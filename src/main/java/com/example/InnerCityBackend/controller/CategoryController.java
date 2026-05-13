@@ -51,6 +51,11 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.updateCategory(id, request));
     }
 
+    @GetMapping("/with-subcategories")
+    public ResponseEntity<List<CategoryWithSubcategoriesResponse>> getAllCategoriesWithSubcategories() {
+        return ResponseEntity.ok(categoryService.getAllWithSubs());
+    }
+
     // ADMIN: Delete a category
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

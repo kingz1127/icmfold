@@ -107,4 +107,11 @@ public class CategoryService {
         // Then delete the category
         categoryRepository.deleteById(id);
     }
+
+    public List<CategoryWithSubcategoriesResponse> getAllWithSubs() {
+        return categoryRepository.findAll()
+                .stream()
+                .map(category -> getWithSubs(category.getId()))
+                .collect(Collectors.toList());
+    }
 }
