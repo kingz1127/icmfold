@@ -200,7 +200,6 @@ public class UserService {
                 .zipCode(user.getZipCode())
                 .bio(user.getBio())
                 .avatar(user.getAvatar())
-                // FIX: safely return null instead of crashing when dateOfBirth is null
                 .dateOfBirth(user.getDateOfBirth())
                 .gender(user.getGender() != null ? user.getGender().toString() : null)
                 .role(user.getRole() != null ? user.getRole().name() : null)

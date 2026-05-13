@@ -51,7 +51,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.updateCategory(id, request));
     }
 
-    @GetMapping("/with-subcategories")
+    @GetMapping("/categories-with-subcategories")
     public ResponseEntity<List<CategoryWithSubcategoriesResponse>> getAllCategoriesWithSubcategories() {
         return ResponseEntity.ok(categoryService.getAllWithSubs());
     }
