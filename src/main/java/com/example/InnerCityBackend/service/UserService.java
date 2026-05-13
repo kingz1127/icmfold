@@ -287,7 +287,6 @@
 //}
 
 
-
 package com.example.InnerCityBackend.service;
 
 import com.example.InnerCityBackend.exception.BusinessException;
@@ -304,6 +303,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Base64;
 
 @Service
@@ -317,6 +318,7 @@ public class UserService {
     public UserResponse updateProfile(String email, UpdateProfileRequest request, MultipartFile image) {
         try {
             log.info("Updating profile for user: {}", email);
+            log.debug("Received dateOfBirth: {}", request.getDateOfBirth());
 
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new BusinessException("User not found"));
@@ -367,15 +369,15 @@ public class UserService {
                 log.debug("Updated bio");
             }
 
-            // Handle date of birth (only if provided and not empty)
+            // Handle date of birth with multiple format support
             if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
                 try {
-                    LocalDate dateOfBirth = LocalDate.parse(request.getDateOfBirth());
+                    LocalDate dateOfBirth = parseDate(request.getDateOfBirth());
                     user.setDateOfBirth(dateOfBirth);
                     log.debug("Updated dateOfBirth: {}", dateOfBirth);
-                } catch (Exception e) {
+                } catch (DateTimeParseException e) {
                     log.warn("Invalid date format: {}", request.getDateOfBirth());
-                    throw new BusinessException("Invalid date format. Please use yyyy-MM-dd");
+                    throw new BusinessException("Invalid date format. Please use MM/dd/yyyy or yyyy-MM-dd");
                 }
             }
 
@@ -413,6 +415,44 @@ public class UserService {
             log.error("Error updating profile for user {}: {}", email, e.getMessage(), e);
             throw new BusinessException("Failed to update profile: " + e.getMessage());
         }
+    }
+
+    /**
+     * Parse date string from multiple possible formats
+     * Supports: MM/dd/yyyy, M/dd/yyyy, MM/d/yyyy, M/d/yyyy, and yyyy-MM-dd
+     */
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            throw new DateTimeParseException("Date string is null or empty", dateStr, 0);
+        }
+
+        // Define possible date formats that the frontend might send
+        String[] possibleFormats = {
+                "MM/dd/yyyy",
+                "M/dd/yyyy",
+                "MM/d/yyyy",
+                "M/d/yyyy",
+                "yyyy-MM-dd"
+        };
+
+        for (String format : possibleFormats) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                LocalDate parsedDate = LocalDate.parse(dateStr.trim(), formatter);
+                log.debug("Successfully parsed date '{}' using format '{}'", dateStr, format);
+                return parsedDate;
+            } catch (DateTimeParseException e) {
+                // Try next format
+                log.trace("Failed to parse '{}' with format '{}'", dateStr, format);
+            }
+        }
+
+        // If all formats fail, throw exception with helpful message
+        throw new DateTimeParseException(
+                "Unable to parse date: " + dateStr + ". Please use format like 12/31/1990 or 1990-12-31",
+                dateStr,
+                0
+        );
     }
 
     private String processImage(MultipartFile file) {
