@@ -16,7 +16,7 @@ public class UpdateOutreachRequest {
     private String country;
     private String state;
     private String city;
-    private String status; // UPCOMING, ONGOING, etc.
+    private String status;
 
     @JsonProperty("start_date")
     private LocalDateTime startDate;

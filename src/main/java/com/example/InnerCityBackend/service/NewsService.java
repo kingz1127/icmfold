@@ -42,11 +42,11 @@ public class NewsService {
                 .createdBy(admin.getId())
                 .build();
 
-        // Priority: uploaded file > URL string from JSON body
+
         if (image != null && !image.isEmpty()) {
-            news.setImage_url(processImage(image));          // Base64 from upload
+            news.setImage_url(processImage(image));
         } else if (request.getImageUrl() != null) {
-            news.setImage_url(request.getImageUrl());        // ✅ Direct URL from JSON
+            news.setImage_url(request.getImageUrl());
         }
 
         return mapToResponse(newsRepository.save(news));
@@ -64,11 +64,11 @@ public class NewsService {
         if (request.getCountry() != null) news.setCountry(request.getCountry());
         if (request.getIsGlobal() != null) news.setGlobal(request.getIsGlobal());
 
-        // Priority: uploaded file > URL string from JSON body
+
         if (image != null && !image.isEmpty()) {
-            news.setImage_url(processImage(image));          // Base64 from upload
+            news.setImage_url(processImage(image));
         } else if (request.getImageUrl() != null) {
-            news.setImage_url(request.getImageUrl());        // ✅ Direct URL from JSON
+            news.setImage_url(request.getImageUrl());
         }
 
         return mapToResponse(newsRepository.save(news));

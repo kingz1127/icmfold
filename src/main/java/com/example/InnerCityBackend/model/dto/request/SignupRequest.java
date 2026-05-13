@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class SignupRequest {
     @NotBlank
-    private String firstName; // JacksonConfig handles 'first_name' -> 'firstName'
+    private String firstName;
     @NotBlank
     private String lastName;
 

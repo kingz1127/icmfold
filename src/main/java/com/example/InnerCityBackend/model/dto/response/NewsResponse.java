@@ -17,8 +17,8 @@ public class NewsResponse {
     private String title;
     private String content;
 
-    @JsonProperty("image_url")   // ✅ JSON output stays "image_url"
-    private String imageUrl;     // ✅ field renamed to camelCase — fixes the builder error
+    @JsonProperty("image_url")
+    private String imageUrl;
 
     @JsonProperty("category_id")
     private String categoryId;
