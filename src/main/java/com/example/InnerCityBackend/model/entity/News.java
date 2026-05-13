@@ -20,8 +20,8 @@ public class News extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(columnDefinition = "TEXT") // Important for storing Base64 data
-    private String imageUrl;
+    @Column(columnDefinition = "TEXT",  name = "image_url") // Important for storing Base64 data
+    private String image_url;
 
     private String categoryId;
 
@@ -33,4 +33,6 @@ public class News extends BaseEntity {
     private boolean isGlobal = false;
 
     private String createdBy;
+
+
 }

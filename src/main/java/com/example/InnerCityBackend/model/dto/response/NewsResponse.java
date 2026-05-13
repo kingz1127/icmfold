@@ -11,7 +11,7 @@ public class NewsResponse {
     private String id;
     private String title;
     private String content;
-    private String imageUrl;
+    private String image_url;
     private String categoryId;
     private String continent;
     private String country;

@@ -42,7 +42,7 @@ public class NewsService {
 
         // Handle the Image Upload
         if (image != null && !image.isEmpty()) {
-            news.setImageUrl(processImage(image));
+            news.setImage_url(processImage(image));
         }
 
         return mapToResponse(newsRepository.save(news));
@@ -62,7 +62,7 @@ public class NewsService {
 
         // Update image only if a new one is uploaded
         if (image != null && !image.isEmpty()) {
-            news.setImageUrl(processImage(image));
+            news.setImage_url(processImage(image));
         }
 
         return mapToResponse(newsRepository.save(news));
@@ -103,7 +103,7 @@ public class NewsService {
                 .id(news.getId())
                 .title(news.getTitle())
                 .content(news.getContent())
-                .imageUrl(news.getImageUrl())
+                .image_url(news.getImage_url())
                 .categoryId(news.getCategoryId())
                 .continent(news.getContinent())
                 .country(news.getCountry())
