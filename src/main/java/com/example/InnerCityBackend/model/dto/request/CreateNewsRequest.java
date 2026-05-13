@@ -12,18 +12,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateNewsRequest {
+
     @NotBlank(message = "Title is required")
     private String title;
 
     @NotBlank(message = "Content is required")
     private String content;
 
+    @JsonProperty("image_url")
+    private String imageUrl;
+
     @JsonProperty("category_id")
-    @NotBlank String categoryId;
+    @NotBlank(message = "Category is required")
+    private String categoryId;
 
     private String continent;
 
     private String country;
 
+    @JsonProperty("is_global")
     private Boolean isGlobal;
 }

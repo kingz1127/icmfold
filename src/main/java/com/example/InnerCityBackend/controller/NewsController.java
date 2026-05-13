@@ -134,7 +134,7 @@ public class NewsController {
     }
 
     // For multipart requests (with image)
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NewsResponse> createNewsMultipart(
             Principal principal,
@@ -144,7 +144,7 @@ public class NewsController {
     }
 
     // For JSON updates (no image)
-    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NewsResponse> updateNewsJson(
             @PathVariable String id,
@@ -153,7 +153,7 @@ public class NewsController {
     }
 
     // For multipart updates (with image)
-    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NewsResponse> updateNewsMultipart(
             @PathVariable String id,

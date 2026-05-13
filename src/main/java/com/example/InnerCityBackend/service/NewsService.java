@@ -30,10 +30,7 @@ public class NewsService {
         User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new BusinessException("Admin user not found"));
 
-        boolean isGlobal = false;
-        if (request.getIsGlobal() != null) {
-            isGlobal = request.getIsGlobal();
-        }
+        boolean isGlobal = request.getIsGlobal() != null && request.getIsGlobal();
 
         News news = News.builder()
                 .title(request.getTitle())
@@ -45,12 +42,12 @@ public class NewsService {
                 .createdBy(admin.getId())
                 .build();
 
-        // Handle the Image Upload
+        // Priority: uploaded file > URL string from JSON body
         if (image != null && !image.isEmpty()) {
-            news.setImage_url(processImage(image));
+            news.setImage_url(processImage(image));          // Base64 from upload
+        } else if (request.getImageUrl() != null) {
+            news.setImage_url(request.getImageUrl());        // ✅ Direct URL from JSON
         }
-
-
 
         return mapToResponse(newsRepository.save(news));
     }
@@ -65,16 +62,13 @@ public class NewsService {
         if (request.getCategoryId() != null) news.setCategoryId(request.getCategoryId());
         if (request.getContinent() != null) news.setContinent(request.getContinent());
         if (request.getCountry() != null) news.setCountry(request.getCountry());
+        if (request.getIsGlobal() != null) news.setGlobal(request.getIsGlobal());
 
-        if (request.getIsGlobal() != null) {
-            news.setGlobal(request.getIsGlobal());
-        } else {
-            news.setGlobal(false); // default value
-        }
-
-        // Update image only if a new one is uploaded
+        // Priority: uploaded file > URL string from JSON body
         if (image != null && !image.isEmpty()) {
-            news.setImage_url(processImage(image));
+            news.setImage_url(processImage(image));          // Base64 from upload
+        } else if (request.getImageUrl() != null) {
+            news.setImage_url(request.getImageUrl());        // ✅ Direct URL from JSON
         }
 
         return mapToResponse(newsRepository.save(news));
@@ -115,7 +109,7 @@ public class NewsService {
                 .id(news.getId())
                 .title(news.getTitle())
                 .content(news.getContent())
-                .image_url(news.getImage_url())
+                .imageUrl(news.getImage_url())
                 .categoryId(news.getCategoryId())
                 .continent(news.getContinent())
                 .country(news.getCountry())
