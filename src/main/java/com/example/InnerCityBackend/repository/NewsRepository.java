@@ -18,4 +18,7 @@ public interface NewsRepository extends JpaRepository<News, String>, JpaSpecific
 
     // Optional: Get all global news
     List<News> findByIsGlobalTrue();
+
+    List<News> getNewsByCountry(String country);
+
 }

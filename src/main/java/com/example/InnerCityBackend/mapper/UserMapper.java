@@ -18,7 +18,6 @@ public class UserMapper {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
-                // Convert Enums to Strings safely
                 .role(user.getRole() != null ? user.getRole().name() : null)
                 .gender(user.getGender() != null ? user.getGender().name() : null)
                 .country(user.getCountry())
