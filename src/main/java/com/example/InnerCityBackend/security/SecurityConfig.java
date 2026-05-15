@@ -1,5 +1,3 @@
-
-
 package com.example.InnerCityBackend.security;
 
 import lombok.RequiredArgsConstructor;
@@ -68,6 +66,14 @@ public class SecurityConfig {
                         // Users - authenticated
                         .requestMatchers("/users/**").authenticated()
 
+                        //Super Admin and searches
+                        .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
+
+
+                        // 1. Search is public (allows users, admins, and guests)
+                        .requestMatchers(HttpMethod.GET, "/news/search", "/outreaches/search").permitAll()
+
+
                         // Admin-only: Categories
                         .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
@@ -96,6 +102,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/partners/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/partners/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/partners/**").hasRole("ADMIN")
+
+
+                        // 3. News/Outreach Management (POST/PUT/DELETE) is for ADMIN and SUPER_ADMIN
+                        .requestMatchers(HttpMethod.POST, "/news/**", "/outreaches/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         .anyRequest().authenticated()
                 )

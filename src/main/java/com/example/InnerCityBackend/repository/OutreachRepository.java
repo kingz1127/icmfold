@@ -1,26 +1,11 @@
-//package com.example.InnerCityBackend.repository;
-//
-//import com.example.InnerCityBackend.model.entity.Outreach;
-//import org.springframework.data.jpa.repository.JpaRepository;
-//import org.springframework.stereotype.Repository;
-//
-//import java.util.List;
-//
-//@Repository
-//public interface OutreachRepository extends JpaRepository<Outreach, String> {
-//    boolean existsBySubcategoryId(String subcategoryId);
-//
-//    long countBySubcategoryId(String subcategoryId);
-//
-//    List<Outreach> findBySubcategoryId(String subcategoryId);
-//}
-
-
-
 package com.example.InnerCityBackend.repository;
 
 import com.example.InnerCityBackend.model.entity.Outreach;
+import org.springframework.data.domain.Page; // Ensure this is imported
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,13 +13,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface OutreachRepository extends JpaRepository<Outreach, String> {
+public interface OutreachRepository extends JpaRepository<Outreach, String>, JpaSpecificationExecutor<Outreach> {
 
+    // These are standard query methods
     boolean existsBySubcategoryId(String subcategoryId);
     long countBySubcategoryId(String subcategoryId);
     List<Outreach> findBySubcategoryId(String subcategoryId);
 
     // Nearby: uses Haversine formula to find outreaches within X km
+    // Note: Ensure table name matches your @Table annotation (usually "outreaches")
     @Query(value = """
         SELECT * FROM outreaches
         WHERE (
@@ -59,7 +46,7 @@ public interface OutreachRepository extends JpaRepository<Outreach, String> {
             @Param("radiusKm") double radiusKm
     );
 
-    // Map bounding box
+    // Map bounding box (Useful for the React Native map view)
     @Query(value = """
         SELECT * FROM outreaches
         WHERE latitude BETWEEN :southLat AND :northLat
@@ -72,4 +59,8 @@ public interface OutreachRepository extends JpaRepository<Outreach, String> {
             @Param("westLng") double westLng,
             @Param("eastLng") double eastLng
     );
+
+    // DELETE the manual findAll method that was here.
+    // JpaSpecificationExecutor already provides:
+    // Page<Outreach> findAll(Specification<Outreach> spec, Pageable pageable);
 }

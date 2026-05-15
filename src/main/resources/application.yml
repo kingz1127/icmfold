@@ -19,6 +19,21 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+
+  mail:
+    host: smtp-relay.brevo.com
+    port: 2525 # Changed from 587 to 2525
+    username: a8d647001@smtp-brevo.com
+    password: xsmtpsib-8f0f8938953cc32cac739300bbc0c0a59cdb0fd4db4378af448fda304cdf2a6d-mzjFayohj8UFFRHw
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+      # MOVE THIS LINE HERE (Out of the 'mail' nesting)
+      from: osunyingboadedeji1@gmail.com
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -49,6 +64,7 @@ application:
 app:
   upload:
     dir: ${UPLOAD_DIR:/tmp/uploads}
+  frontend-url: https://icm-web-beta.vercel.app
 
 management:
   endpoints:

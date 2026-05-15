@@ -7,9 +7,12 @@ import com.example.InnerCityBackend.model.dto.request.UpdateNewsRequest;
 import com.example.InnerCityBackend.model.dto.response.NewsResponse;
 import com.example.InnerCityBackend.model.dto.response.SuccessResponse;
 import com.example.InnerCityBackend.service.NewsService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,5 +83,15 @@ public class NewsController {
     @GetMapping("/{id}")
     public ResponseEntity<NewsResponse> getNewsById(@PathVariable String id) {
         return ResponseEntity.ok(newsService.getNewsById(id));
+    }
+
+    // Add this to both NewsController and OutreachController
+    @GetMapping("/search")
+    @Operation(summary = "pagination of 10 per page")
+    public ResponseEntity<Page<?>> search(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(newsService.search(query, PageRequest.of(page, size)));
     }
 }

@@ -9,6 +9,10 @@ import com.example.InnerCityBackend.model.entity.User;
 import com.example.InnerCityBackend.repository.NewsRepository;
 import com.example.InnerCityBackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -119,5 +123,19 @@ public class NewsService {
                 .updatedAt(news.getUpdatedAt())
                 .build();
     }
+
+    public Page<NewsResponse> search(String query, Pageable pageable) {
+        Specification<News> spec = (root, q, cb) -> {
+            if (query == null || query.isEmpty()) return cb.conjunction();
+            String pattern = "%" + query.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(root.get("content")), pattern)
+            );
+        };
+        return newsRepository.findAll(spec, pageable).map(this::mapToResponse);
+    }
+
+
 }
 

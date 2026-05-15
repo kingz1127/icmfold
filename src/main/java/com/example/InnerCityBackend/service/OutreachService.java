@@ -10,6 +10,9 @@ import com.example.InnerCityBackend.model.enums.*;
 import com.example.InnerCityBackend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +23,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import java.util.stream.Collectors;
+import jakarta.persistence.criteria.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -319,5 +324,30 @@ public class OutreachService {
         }
         fields.add(sb.toString());
         return fields.toArray(new String[0]);
+    }
+
+    public Page<OutreachResponse> searchOutreaches(String title, String subCategoryId, String country, Pageable pageable) {
+        Specification<Outreach> spec = (root, q, cb) -> {
+            // Now 'Predicate' refers to jakarta.persistence.criteria.Predicate
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (title != null && !title.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+            }
+            if (subCategoryId != null && !subCategoryId.isBlank()) {
+                predicates.add(cb.equal(root.get("subcategory").get("id"), subCategoryId));
+            }
+            if (country != null && !country.isBlank()) {
+                predicates.add(cb.equal(root.get("country"), country));
+            }
+
+            // Only show approved outreaches to the public
+            predicates.add(cb.equal(root.get("approvalStatus"), ApprovalStatus.APPROVED));
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // Use the injected mapper instead of 'this::mapToResponse'
+        return outreachRepository.findAll(spec, pageable).map(outreachMapper::toResponse);
     }
 }

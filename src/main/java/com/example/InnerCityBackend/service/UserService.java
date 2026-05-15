@@ -3,13 +3,18 @@
 package com.example.InnerCityBackend.service;
 
 import com.example.InnerCityBackend.exception.BusinessException;
+import com.example.InnerCityBackend.mapper.UserMapper;
 import com.example.InnerCityBackend.model.dto.request.UpdateProfileRequest;
 import com.example.InnerCityBackend.model.dto.response.UserResponse;
 import com.example.InnerCityBackend.model.entity.User;
 import com.example.InnerCityBackend.model.enums.Gender;
+import com.example.InnerCityBackend.model.enums.UserRole;
 import com.example.InnerCityBackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +30,7 @@ import java.util.Base64;
 @Slf4j
 public class UserService {
 
+    private final UserMapper userMapper;
     private final UserRepository userRepository;
 
     @Transactional
@@ -238,5 +244,49 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+
+    // PAGINATED SEARCH: Search by Name or Email
+    public Page<UserResponse> searchUsers(String query, Pageable pageable) {
+        Specification<User> spec = (root, q, cb) -> {
+            if (query == null || query.isEmpty()) return cb.conjunction();
+            String wildCard = "%" + query.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("firstName")), wildCard),
+                    cb.like(cb.lower(root.get("lastName")), wildCard),
+                    cb.like(cb.lower(root.get("email")), wildCard)
+            );
+        };
+        return userRepository.findAll(spec, pageable).map(userMapper::toResponse);
+    }
+
+
+    @Transactional
+    public UserResponse changeUserRole(String userId, UserRole newRole) {
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        // Security: Prevent demoting the Super Admin
+        if (targetUser.getRole() == UserRole.SUPER_ADMIN) {
+            throw new BusinessException("Cannot modify roles of a Super Admin");
+        }
+
+        targetUser.setRole(newRole);
+        return mapToResponse(userRepository.save(targetUser));
+    }
+
+    // Search for Users (Only for Super Admin to find people to promote)
+    public Page<UserResponse> adminSearchUsers(String query, Pageable pageable) {
+        Specification<User> spec = (root, q, cb) -> {
+            if (query == null || query.isEmpty()) return cb.conjunction();
+            String pattern = "%" + query.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("email")), pattern),
+                    cb.like(cb.lower(root.get("firstName")), pattern), // FIXED: firstName, not first_name
+                    cb.like(cb.lower(root.get("lastName")), pattern)
+            );
+        };
+        return userRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 }
