@@ -37,6 +37,7 @@ public class OutreachMapper {
                     .description(o.getSubcategory().getDescription())
                     .categoryId(o.getSubcategory().getCategory() != null ?
                             o.getSubcategory().getCategory().getId() : null)
+                    .category(catDto)
                     .build();
         }
 
@@ -62,6 +63,7 @@ public class OutreachMapper {
                 .subcategory(subDto)
                 .createdAt(o.getCreatedAt())
                 .updatedAt(o.getUpdatedAt())
+                .subcategoryId(o.getSubcategory() != null ? o.getSubcategory().getId() : null)
                 .build();
     }
 }

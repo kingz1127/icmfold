@@ -18,6 +18,9 @@ public class UpdateOutreachRequest {
     private String city;
     private String status;
 
+    @JsonProperty("approval_status")
+    private String approvalStatus;
+
     @JsonProperty("start_date")
     private LocalDateTime startDate;
 
