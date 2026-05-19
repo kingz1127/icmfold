@@ -104,8 +104,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/partners/**").hasRole("ADMIN")
 
 
+//                        volunteer anyone can volunteer
+                        .requestMatchers("/volunteers/signup").permitAll()
+
                         // 3. News/Outreach Management (POST/PUT/DELETE) is for ADMIN and SUPER_ADMIN
                         .requestMatchers(HttpMethod.POST, "/news/**", "/outreaches/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+
+
+                        .requestMatchers("/donations/webhook").permitAll() // Allow Paystack to call this
 
                         .anyRequest().authenticated()
                 )

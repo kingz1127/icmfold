@@ -99,3 +99,10 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.springframework.boot: DEBUG
+
+paystack:
+  secret-key: ${PAYSTACK_SECRET_KEY}
+  public-key: ${PAYSTACK_PUBLIC_KEY}
+  url:
+    initialize: https://api.paystack.co/transaction/initialize
+    verify: https://api.paystack.co/transaction/verify/
